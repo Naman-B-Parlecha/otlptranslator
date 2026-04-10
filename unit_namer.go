@@ -33,7 +33,7 @@ type UnitNamer struct {
 //
 // Unit mappings include:
 //   - Time: s→seconds, ms→milliseconds, h→hours
-//   - Bytes: By→bytes, KBy→kilobytes, MBy→megabytes
+//   - Bytes: By→bytes, kBy→kilobytes, MBy→megabytes
 //   - SI: m→meters, V→volts, W→watts
 //   - Special: 1→"" (empty), %→percent
 //
