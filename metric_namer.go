@@ -48,9 +48,11 @@ var unitMap = map[string]string{
 	"GiBy": "gibibytes",
 	"TiBy": "tebibytes",
 	"kBy":  "kilobytes",
-	"MBy":  "megabytes",
-	"GBy":  "gigabytes",
-	"TBy":  "terabytes",
+	// for backwards compatibility.
+	"KBy": "kilobytes",
+	"MBy": "megabytes",
+	"GBy": "gigabytes",
+	"TBy": "terabytes",
 
 	// SI
 	"m": "meters",

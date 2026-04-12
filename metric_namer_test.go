@@ -819,6 +819,20 @@ func TestMetricNamer_Build(t *testing.T) {
 			wantUnitName:   "kilobytes",
 		},
 		{
+			name: "metric with kilobytes unit (backwards compatibility)",
+			namer: MetricNamer{
+				UTF8Allowed:        false,
+				WithMetricSuffixes: true,
+			},
+			metric: Metric{
+				Name: "transfer",
+				Unit: "KBy",
+				Type: MetricTypeGauge,
+			},
+			wantMetricName: "transfer_kilobytes",
+			wantUnitName:   "kilobytes",
+		},
+		{
 			name: "metric with megabytes unit",
 			namer: MetricNamer{
 				UTF8Allowed:        false,
