@@ -791,10 +791,25 @@ func TestMetricNamer_Build(t *testing.T) {
 			wantUnitName:   "gibibytes",
 		},
 		{
-			name: "metric with tebibytes unit",
+			name: "metric with tibibytes unit",
 			namer: MetricNamer{
 				UTF8Allowed:        false,
 				WithMetricSuffixes: true,
+			},
+			metric: Metric{
+				Name: "capacity",
+				Unit: "TiBy",
+				Type: MetricTypeGauge,
+			},
+			wantMetricName: "capacity_tibibytes",
+			wantUnitName:   "tibibytes",
+		},
+		{
+			name: "metric with tebibytes unit with flag",
+			namer: MetricNamer{
+				UTF8Allowed:           false,
+				WithMetricSuffixes:    true,
+				UpdatedMetricsMapping: true,
 			},
 			metric: Metric{
 				Name: "capacity",
@@ -812,21 +827,23 @@ func TestMetricNamer_Build(t *testing.T) {
 			},
 			metric: Metric{
 				Name: "transfer",
-				Unit: "kBy",
+				Unit: "KBy",
 				Type: MetricTypeGauge,
 			},
 			wantMetricName: "transfer_kilobytes",
 			wantUnitName:   "kilobytes",
 		},
+
 		{
-			name: "metric with kilobytes unit (backwards compatibility)",
+			name: "metric with kilobytes unit with flag",
 			namer: MetricNamer{
-				UTF8Allowed:        false,
-				WithMetricSuffixes: true,
+				UTF8Allowed:           false,
+				WithMetricSuffixes:    true,
+				UpdatedMetricsMapping: true,
 			},
 			metric: Metric{
 				Name: "transfer",
-				Unit: "KBy",
+				Unit: "kBy",
 				Type: MetricTypeGauge,
 			},
 			wantMetricName: "transfer_kilobytes",
@@ -1221,7 +1238,8 @@ func TestMetricNamer_Build(t *testing.T) {
 			// Build unit name using UnitNamer to verify correlation when suffixes are enabled
 			if tt.namer.WithMetricSuffixes {
 				unitNamer := UnitNamer{
-					UTF8Allowed: tt.namer.UTF8Allowed,
+					UTF8Allowed:           tt.namer.UTF8Allowed,
+					UpdatedMetricsMapping: tt.namer.UpdatedMetricsMapping,
 				}
 				gotUnitName := unitNamer.Build(tt.metric.Unit)
 				if gotUnitName != tt.wantUnitName {

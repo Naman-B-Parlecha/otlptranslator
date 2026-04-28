@@ -24,7 +24,8 @@ import "strings"
 //	result := namer.Build("s")     // "seconds"
 //	result = namer.Build("By/s")   // "bytes_per_second"
 type UnitNamer struct {
-	UTF8Allowed bool
+	UTF8Allowed           bool
+	UpdatedMetricsMapping bool
 }
 
 // Build builds a unit name for the specified unit string.
@@ -44,7 +45,7 @@ type UnitNamer struct {
 //	namer.Build("requests/s")  // "requests_per_second"
 //	namer.Build("1")           // "" (dimensionless)
 func (un *UnitNamer) Build(unit string) string {
-	mainUnit, perUnit := buildUnitSuffixes(unit)
+	mainUnit, perUnit := buildUnitSuffixes(unit, un.UpdatedMetricsMapping)
 	if !un.UTF8Allowed {
 		mainUnit, perUnit = cleanUpUnit(mainUnit), cleanUpUnit(perUnit)
 	}
@@ -72,7 +73,15 @@ func (un *UnitNamer) Build(unit string) string {
 
 // Retrieve the Prometheus "basic" unit corresponding to the specified "basic" unit.
 // Returns the specified unit if not found in unitMap.
-func unitMapGetOrDefault(unit string) string {
+func unitMapGetOrDefault(unit string, updatedSuffix bool) string {
+	if updatedSuffix {
+		// checks for updatd values, TiBy <-> tebibytes and kBy <-> kilobytes.
+		if promUnit, ok := updatedUnitMap[unit]; ok {
+			return promUnit
+		}
+		// doesnt return cause what if the unit is not in the updated map but is
+		// in the original map, we want to check that as well.
+	}
 	if promUnit, ok := unitMap[unit]; ok {
 		return promUnit
 	}
@@ -91,7 +100,7 @@ func perUnitMapGetOrDefault(perUnit string) string {
 // buildUnitSuffixes builds the main and per unit suffixes for the specified unit
 // but doesn't do any special character transformation to accommodate Prometheus naming conventions.
 // Removing trailing underscores or appending suffixes is done in the caller.
-func buildUnitSuffixes(unit string) (mainUnitSuffix, perUnitSuffix string) {
+func buildUnitSuffixes(unit string, updatedMetricName bool) (mainUnitSuffix, perUnitSuffix string) {
 	// Split unit at the '/' if any
 	unitTokens := strings.SplitN(unit, "/", 2)
 
@@ -100,7 +109,7 @@ func buildUnitSuffixes(unit string) (mainUnitSuffix, perUnitSuffix string) {
 		// Update if not blank and doesn't contain '{}'
 		mainUnitOTel := strings.TrimSpace(unitTokens[0])
 		if mainUnitOTel != "" && !strings.ContainsAny(mainUnitOTel, "{}") {
-			mainUnitSuffix = unitMapGetOrDefault(mainUnitOTel)
+			mainUnitSuffix = unitMapGetOrDefault(mainUnitOTel, updatedMetricName)
 		}
 
 		// Per unit

@@ -46,13 +46,11 @@ var unitMap = map[string]string{
 	"KiBy": "kibibytes",
 	"MiBy": "mebibytes",
 	"GiBy": "gibibytes",
-	"TiBy": "tebibytes",
-	"kBy":  "kilobytes",
-	// for backwards compatibility.
-	"KBy": "kilobytes",
-	"MBy": "megabytes",
-	"GBy": "gigabytes",
-	"TBy": "terabytes",
+	"TiBy": "tibibytes",
+	"KBy":  "kilobytes",
+	"MBy":  "megabytes",
+	"GBy":  "gigabytes",
+	"TBy":  "terabytes",
 
 	// SI
 	"m": "meters",
@@ -67,6 +65,11 @@ var unitMap = map[string]string{
 	"Hz":  "hertz",
 	"1":   "",
 	"%":   "percent",
+}
+
+var updatedUnitMap = map[string]string{
+	"TiBy": "tebibytes",
+	"kBy":  "kilobytes",
 }
 
 // The map that translates the "per" unit.
@@ -102,16 +105,33 @@ type MetricNamer struct {
 	Namespace          string
 	WithMetricSuffixes bool
 	UTF8Allowed        bool
+	// to fix the UCUM metrics suffix tebibyte and kBy
+	UpdatedMetricsMapping bool
+}
+
+type Option func(*MetricNamer)
+
+// WithUpdatedMetricsMapping enables corrected UCUM unit mappings.
+// It maps TiBy to "tebibytes" instead of "tibibytes"
+// and adds kBy as "kilobytes" the correct notation.
+func WithUpdatedMetricsMapping() Option {
+	return func(mn *MetricNamer) {
+		mn.UpdatedMetricsMapping = true
+	}
 }
 
 // NewMetricNamer creates a MetricNamer with the specified namespace (can be
 // blank) and the requested Translation Strategy.
-func NewMetricNamer(namespace string, strategy TranslationStrategyOption) MetricNamer {
-	return MetricNamer{
+func NewMetricNamer(namespace string, strategy TranslationStrategyOption, opts ...Option) MetricNamer {
+	mn := MetricNamer{
 		Namespace:          namespace,
 		WithMetricSuffixes: strategy.ShouldAddSuffixes(),
 		UTF8Allowed:        !strategy.ShouldEscape(),
 	}
+	for _, opt := range opts {
+		opt(&mn)
+	}
+	return mn
 }
 
 // Metric is a helper struct that holds information about a metric.
@@ -180,7 +200,7 @@ func (mn *MetricNamer) buildCompliantMetricName(name, unit string, metricType Me
 
 	// Full normalization following standard Prometheus naming conventions
 	if mn.WithMetricSuffixes {
-		normalizedName = normalizeName(name, unit, metricType, mn.Namespace)
+		normalizedName = normalizeName(name, unit, metricType, mn.Namespace, mn.UpdatedMetricsMapping)
 		return
 	}
 
@@ -224,7 +244,7 @@ func replaceInvalidMetricChar(r rune) rune {
 }
 
 // Build a normalized name for the specified metric.
-func normalizeName(name, unit string, metricType MetricType, namespace string) string {
+func normalizeName(name, unit string, metricType MetricType, namespace string, updatedMetricsMapping bool) string {
 	// Split metric name into "tokens" (of supported metric name runes).
 	// Note that this has the side effect of replacing multiple consecutive underscores with a single underscore.
 	// This is part of the OTel to Prometheus specification: https://github.com/open-telemetry/opentelemetry-specification/blob/v1.38.0/specification/compatibility/prometheus_and_openmetrics.md#otlp-metric-points-to-prometheus.
@@ -233,7 +253,7 @@ func normalizeName(name, unit string, metricType MetricType, namespace string) s
 		func(r rune) bool { return !isValidCompliantMetricChar(r) },
 	)
 
-	mainUnitSuffix, perUnitSuffix := buildUnitSuffixes(unit)
+	mainUnitSuffix, perUnitSuffix := buildUnitSuffixes(unit, updatedMetricsMapping)
 	nameTokens = addUnitTokens(nameTokens, cleanUpUnit(mainUnitSuffix), cleanUpUnit(perUnitSuffix))
 
 	// Append _total for Counters
@@ -337,7 +357,7 @@ func (mn *MetricNamer) buildMetricName(inputName, unit string, metricType Metric
 			}()
 		}
 
-		mainUnitSuffix, perUnitSuffix := buildUnitSuffixes(unit)
+		mainUnitSuffix, perUnitSuffix := buildUnitSuffixes(unit, mn.UpdatedMetricsMapping)
 		if perUnitSuffix != "" {
 			name = trimSuffixAndDelimiter(name, perUnitSuffix)
 			defer func() {
