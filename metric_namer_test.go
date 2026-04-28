@@ -809,7 +809,7 @@ func TestMetricNamer_Build(t *testing.T) {
 			namer: MetricNamer{
 				UTF8Allowed:           false,
 				WithMetricSuffixes:    true,
-				UpdatedMetricsMapping: true,
+				UpdatedMetricMapping: true,
 			},
 			metric: Metric{
 				Name: "capacity",
@@ -839,7 +839,7 @@ func TestMetricNamer_Build(t *testing.T) {
 			namer: MetricNamer{
 				UTF8Allowed:           false,
 				WithMetricSuffixes:    true,
-				UpdatedMetricsMapping: true,
+				UpdatedMetricMapping: true,
 			},
 			metric: Metric{
 				Name: "transfer",
@@ -1239,7 +1239,7 @@ func TestMetricNamer_Build(t *testing.T) {
 			if tt.namer.WithMetricSuffixes {
 				unitNamer := UnitNamer{
 					UTF8Allowed:           tt.namer.UTF8Allowed,
-					UpdatedMetricsMapping: tt.namer.UpdatedMetricsMapping,
+					UpdatedMetricMapping: tt.namer.UpdatedMetricMapping,
 				}
 				gotUnitName := unitNamer.Build(tt.metric.Unit)
 				if gotUnitName != tt.wantUnitName {

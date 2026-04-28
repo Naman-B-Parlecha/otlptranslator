@@ -106,17 +106,17 @@ type MetricNamer struct {
 	WithMetricSuffixes bool
 	UTF8Allowed        bool
 	// to fix the UCUM metrics suffix tebibyte and kBy
-	UpdatedMetricsMapping bool
+	UpdatedMetricMapping bool
 }
 
 type Option func(*MetricNamer)
 
-// WithUpdatedMetricsMapping enables corrected UCUM unit mappings.
+// WithUpdatedMetricMapping enables corrected UCUM unit mappings.
 // It maps TiBy to "tebibytes" instead of "tibibytes"
 // and adds kBy as "kilobytes" the correct notation.
-func WithUpdatedMetricsMapping() Option {
+func WithUpdatedMetricMapping() Option {
 	return func(mn *MetricNamer) {
-		mn.UpdatedMetricsMapping = true
+		mn.UpdatedMetricMapping = true
 	}
 }
 
@@ -200,7 +200,7 @@ func (mn *MetricNamer) buildCompliantMetricName(name, unit string, metricType Me
 
 	// Full normalization following standard Prometheus naming conventions
 	if mn.WithMetricSuffixes {
-		normalizedName = normalizeName(name, unit, metricType, mn.Namespace, mn.UpdatedMetricsMapping)
+		normalizedName = normalizeName(name, unit, metricType, mn.Namespace, mn.UpdatedMetricMapping)
 		return
 	}
 
@@ -357,7 +357,7 @@ func (mn *MetricNamer) buildMetricName(inputName, unit string, metricType Metric
 			}()
 		}
 
-		mainUnitSuffix, perUnitSuffix := buildUnitSuffixes(unit, mn.UpdatedMetricsMapping)
+		mainUnitSuffix, perUnitSuffix := buildUnitSuffixes(unit, mn.UpdatedMetricMapping)
 		if perUnitSuffix != "" {
 			name = trimSuffixAndDelimiter(name, perUnitSuffix)
 			defer func() {

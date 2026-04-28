@@ -25,7 +25,7 @@ import "strings"
 //	result = namer.Build("By/s")   // "bytes_per_second"
 type UnitNamer struct {
 	UTF8Allowed           bool
-	UpdatedMetricsMapping bool
+	UpdatedMetricMapping bool
 }
 
 // Build builds a unit name for the specified unit string.
@@ -45,7 +45,7 @@ type UnitNamer struct {
 //	namer.Build("requests/s")  // "requests_per_second"
 //	namer.Build("1")           // "" (dimensionless)
 func (un *UnitNamer) Build(unit string) string {
-	mainUnit, perUnit := buildUnitSuffixes(unit, un.UpdatedMetricsMapping)
+	mainUnit, perUnit := buildUnitSuffixes(unit, un.UpdatedMetricMapping)
 	if !un.UTF8Allowed {
 		mainUnit, perUnit = cleanUpUnit(mainUnit), cleanUpUnit(perUnit)
 	}
